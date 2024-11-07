@@ -4,7 +4,7 @@ import edge_tts
 import json
 import asyncio
 import whisper_timestamped as whisper
-from utility.script.script_generator import generate_script
+from utility.script.script_generator import process_script
 from utility.audio.audio_generator import generate_audio
 from utility.captions.timed_captions_generator import generate_timed_captions
 from utility.video.background_video_generator import generate_video_url
@@ -13,31 +13,31 @@ from utility.video.video_search_query_generator import getVideoSearchQueriesTime
 import argparse
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Generate a video from a topic.")
-    parser.add_argument("topic", type=str, help="The topic for the video")
+    parser = argparse.ArgumentParser(description="Generate a video from a script.")
+    parser.add_argument("script", type=str, help="The script for the video")
     parser.add_argument("--video_type", type=str, choices=['short', 'long'], default='short', help="Type of video to generate")
 
     args = parser.parse_args()
-    SAMPLE_TOPIC = args.topic
+    USER_SCRIPT = args.script
     SAMPLE_FILE_NAME = "audio_tts.wav"
     VIDEO_SERVER = "pexel"
 
-    # Generate the script based on the video type
-    response = generate_script(SAMPLE_TOPIC, args.video_type)
-    print("script: {}".format(response))
+    # Process the user-provided script
+    processed_script = process_script(USER_SCRIPT, args.video_type)
+    print("Processed Script:", processed_script)
 
-    asyncio.run(generate_audio(response, SAMPLE_FILE_NAME))
+    asyncio.run(generate_audio(processed_script, SAMPLE_FILE_NAME))
 
     timed_captions = generate_timed_captions(SAMPLE_FILE_NAME)
-    print(timed_captions)
+    print("Timed Captions:", timed_captions)
 
-    search_terms = getVideoSearchQueriesTimed(response, timed_captions)
-    print(search_terms)
+    search_terms = getVideoSearchQueriesTimed(processed_script, timed_captions)
+    print("Search Terms:", search_terms)
 
     background_video_urls = None
     if search_terms is not None:
         background_video_urls = generate_video_url(search_terms, VIDEO_SERVER)
-        print(background_video_urls)
+        print("Background Video URLs:", background_video_urls)
     else:
         print("No background video")
 
@@ -45,7 +45,6 @@ if __name__ == "__main__":
 
     if background_video_urls is not None:
         video = get_output_media(SAMPLE_FILE_NAME, timed_captions, background_video_urls, VIDEO_SERVER)
-        print(video)
+        print("Output Video:", video)
     else:
         print("No video")
-    
